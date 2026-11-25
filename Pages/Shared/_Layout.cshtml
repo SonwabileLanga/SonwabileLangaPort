@@ -148,6 +148,9 @@
         .contact-form textarea{resize:vertical}
         .form-submit{width:100%;cursor:pointer}
         .form-note{margin:-5px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+        .form-note-success{color:var(--accent)}
+        .form-note-error,.field-validation-error,.validation-summary-errors{color:#ff9b91}
+        .field-validation-error{font-size:10px}
         .site-footer{display:grid;width:min(1320px,calc(100% - 96px));min-height:150px;margin:0 auto;padding:31px 0;grid-template-columns:1.2fr 1fr 1.3fr auto;gap:25px;align-items:center;border-top:1px solid var(--line)}
         .site-footer>p{margin:0;color:var(--muted);font-size:11px;line-height:1.7}
         .footer-links{display:flex;gap:18px;color:#cfcdc3;font-size:11px}
@@ -213,29 +216,6 @@
             });
         });
 
-        document.querySelector("#contact-form")?.addEventListener("submit", (event) => {
-            event.preventDefault();
-
-            const form = event.currentTarget;
-            if (!(form instanceof HTMLFormElement) || !form.reportValidity()) {
-                return;
-            }
-
-            const data = new FormData(form);
-            const name = `${data.get("firstName")} ${data.get("lastName")}`.trim();
-            const subject = `${data.get("project")} enquiry from ${name}`;
-            const message = [
-                `Name: ${name}`,
-                `Email: ${data.get("email")}`,
-                `Project: ${data.get("project")}`,
-                "",
-                data.get("message")
-            ].join("\n");
-            const mailto = `mailto:langasonwabile1993@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-
-            window.location.href = mailto;
-            document.querySelector("#form-note").textContent = "Your email app should open with your message ready. If it doesn’t, email langasonwabile1993@gmail.com directly.";
-        });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

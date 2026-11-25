@@ -116,17 +116,24 @@
         </div>
         <a class="whatsapp-link" href="https://wa.me/27735630190?text=Hi%20Sonwabile%20%E2%80%94%20I%20saw%20your%20website%20and%20I%27d%20like%20to%20discuss%20a%20project." target="_blank" rel="noreferrer">Message me on WhatsApp <span aria-hidden="true">↗</span></a>
     </div>
-    <form class="contact-form" id="contact-form">
+    <form class="contact-form" id="contact-form" method="post" asp-page-handler="Send">
         <p class="form-eyebrow">A good project starts with a hello.</p>
         <div class="form-row">
-            <label>First name<input name="firstName" autocomplete="given-name" placeholder="Your first name" required /></label>
-            <label>Last name<input name="lastName" autocomplete="family-name" placeholder="Your last name" required /></label>
+            <label>First name<input asp-for="FirstName" autocomplete="given-name" placeholder="Your first name" required /><span asp-validation-for="FirstName"></span></label>
+            <label>Last name<input asp-for="LastName" autocomplete="family-name" placeholder="Your last name" required /><span asp-validation-for="LastName"></span></label>
         </div>
-        <label>Email address<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
-        <label>What are you looking to build?<select name="project" required><option value="" disabled selected>Choose a project type</option><option>Business website</option><option>Web app or portal</option><option>E-commerce experience</option><option>Something else</option></select></label>
-        <label>A little more about it<textarea name="message" rows="4" placeholder="Tell me about your idea..." required></textarea></label>
-        <button class="button button-primary form-submit" type="submit">Open email to say hello <span aria-hidden="true">↗</span></button>
-        <p class="form-note" id="form-note">This opens your email app with your message ready to send.</p>
+        <label>Email address<input asp-for="Email" type="email" autocomplete="email" placeholder="you@example.com" required /><span asp-validation-for="Email"></span></label>
+        <label>What are you looking to build?<select asp-for="Project" required><option value="" disabled>Choose a project type</option><option>Business website</option><option>Web app or portal</option><option>E-commerce experience</option><option>Something else</option></select><span asp-validation-for="Project"></span></label>
+        <label>A little more about it<textarea asp-for="Message" rows="4" placeholder="Tell me about your idea..." required></textarea><span asp-validation-for="Message"></span></label>
+        <button class="button button-primary form-submit" type="submit">Send message <span aria-hidden="true">↗</span></button>
+        @if (Model.ContactStatus is not null)
+        {
+            <p class="form-note @(Model.ContactSent ? "form-note-success" : "form-note-error")" id="form-note" role="status" aria-live="polite">@Model.ContactStatus</p>
+        }
+        else
+        {
+            <p class="form-note" id="form-note">Your message will be sent securely by email.</p>
+        }
     </form>
 </section>
 

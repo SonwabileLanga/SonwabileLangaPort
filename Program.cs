@@ -1,7 +1,14 @@
+using Resend;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddResend(options =>
+{
+    options.ApiToken = builder.Configuration["RESEND_API_KEY"] ?? string.Empty;
+    options.ThrowExceptions = true;
+});
 
 var app = builder.Build();
 

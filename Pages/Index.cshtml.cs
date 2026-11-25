@@ -1,10 +1,124 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Resend;
 
 namespace SmokeTest.Pages;
 
 public class IndexModel : PageModel
 {
+    private static readonly string[] ProjectTypes =
+    [
+        "Business website", "Web app or portal", "E-commerce experience", "Something else"
+    ];
+
+    private readonly IResend _resend;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<IndexModel> _logger;
+
+    public IndexModel(IResend resend, IConfiguration configuration, ILogger<IndexModel> logger)
+    {
+        _resend = resend;
+        _configuration = configuration;
+        _logger = logger;
+    }
+
+    [BindProperty, Required, StringLength(80)]
+    public string FirstName { get; set; } = string.Empty;
+
+    [BindProperty, Required, StringLength(80)]
+    public string LastName { get; set; } = string.Empty;
+
+    [BindProperty, Required, EmailAddress, StringLength(254)]
+    public string Email { get; set; } = string.Empty;
+
+    [BindProperty, Required]
+    public string Project { get; set; } = string.Empty;
+
+    [BindProperty, Required, StringLength(4000, MinimumLength = 10)]
+    public string Message { get; set; } = string.Empty;
+
+    public string? ContactStatus { get; private set; }
+    public bool ContactSent { get; private set; }
+
+    public async Task<IActionResult> OnPostSendAsync(CancellationToken cancellationToken)
+    {
+        FirstName = FirstName.Trim();
+        LastName = LastName.Trim();
+        Email = Email.Trim();
+        Message = Message.Trim();
+
+        if (string.IsNullOrWhiteSpace(FirstName))
+        {
+            ModelState.AddModelError(nameof(FirstName), "Enter your first name.");
+        }
+
+        if (string.IsNullOrWhiteSpace(LastName))
+        {
+            ModelState.AddModelError(nameof(LastName), "Enter your last name.");
+        }
+
+        if (string.IsNullOrWhiteSpace(Message))
+        {
+            ModelState.AddModelError(nameof(Message), "Enter a message.");
+        }
+
+        if (!ProjectTypes.Contains(Project, StringComparer.Ordinal))
+        {
+            ModelState.AddModelError(nameof(Project), "Choose a project type from the list.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            ContactStatus = "Please check the form and correct the highlighted fields.";
+            return Page();
+        }
+
+        var apiKey = _configuration["RESEND_API_KEY"];
+        var fromAddress = _configuration["RESEND_FROM_EMAIL"];
+        if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(fromAddress))
+        {
+            _logger.LogError("Contact form email is unavailable because Resend is not configured.");
+            ContactStatus = "The contact form is temporarily unavailable. Please email langasonwabile1993@gmail.com directly.";
+            return Page();
+        }
+
+        var fullName = $"{FirstName.Trim()} {LastName.Trim()}";
+        var message = new EmailMessage
+        {
+            From = fromAddress,
+            Subject = "New portfolio contact form message",
+            ReplyTo = Email.Trim(),
+            TextBody = $"Name: {fullName}\nEmail: {Email.Trim()}\nProject: {Project}\n\n{Message.Trim()}"
+        };
+        message.To.Add("langasonwabile1993@gmail.com");
+
+        try
+        {
+            await _resend.EmailSendAsync(message, cancellationToken);
+            ContactSent = true;
+            ContactStatus = "Thanks for reaching out. Your message has been sent.";
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            Email = string.Empty;
+            Project = string.Empty;
+            Message = string.Empty;
+            ModelState.Clear();
+        }
+        catch (ResendException exception)
+        {
+            _logger.LogError(exception, "Resend rejected a portfolio contact form message.");
+            ContactStatus = "We couldn’t send your message right now. Please try again or email langasonwabile1993@gmail.com directly.";
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Could not connect to Resend for a portfolio contact form message.");
+            ContactStatus = "We couldn’t send your message right now. Please try again or email langasonwabile1993@gmail.com directly.";
+        }
+
+        return Page();
+    }
+
     public IReadOnlyList<string> ProjectCategories { get; } =
     [
         "E-commerce", "Marketing", "Beauty", "Directory", "Trades", "Hospitality",

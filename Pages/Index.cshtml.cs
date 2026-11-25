@@ -35,7 +35,7 @@ public class IndexModel : PageModel
     [BindProperty, Required]
     public string Project { get; set; } = string.Empty;
 
-    [BindProperty, Required, StringLength(4000, MinimumLength = 10)]
+    [BindProperty, Required(ErrorMessage = "Please enter a message."), StringLength(4000, ErrorMessage = "Please keep your message under 4,000 characters.")]
     public string Message { get; set; } = string.Empty;
 
     public string? ContactStatus { get; private set; }
@@ -43,10 +43,11 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostSendAsync(CancellationToken cancellationToken)
     {
-        FirstName = FirstName.Trim();
-        LastName = LastName.Trim();
-        Email = Email.Trim();
-        Message = Message.Trim();
+        FirstName = FirstName?.Trim() ?? string.Empty;
+        LastName = LastName?.Trim() ?? string.Empty;
+        Email = Email?.Trim() ?? string.Empty;
+        Project = Project?.Trim() ?? string.Empty;
+        Message = Message?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(FirstName))
         {
@@ -56,11 +57,6 @@ public class IndexModel : PageModel
         if (string.IsNullOrWhiteSpace(LastName))
         {
             ModelState.AddModelError(nameof(LastName), "Enter your last name.");
-        }
-
-        if (string.IsNullOrWhiteSpace(Message))
-        {
-            ModelState.AddModelError(nameof(Message), "Enter a message.");
         }
 
         if (!ProjectTypes.Contains(Project, StringComparer.Ordinal))
